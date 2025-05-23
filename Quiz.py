@@ -270,3 +270,27 @@ class QuizApp:
             self.submit_btn.config(state="disabled")
             self.feedback_label.config(text="Time's up! No answer submitted.", foreground="red")
             self.root.after(2000, self.move_to_next_question)
+    
+    def submit_answer(self):
+        if not self.question_active:
+            return
+        answer = self.selected_answer.get()
+        if not answer:
+            messagebox.showwarning("No Answer", "Please select an answer.")
+            return
+
+        self.question_active = False
+        self.submit_btn.config(state="disabled")
+
+        correct = self.questions[self.current_q].is_correct(answer)
+        if correct:
+            self.score += 1
+            self.feedback_label.config(text="✅ Correct!", foreground="green")
+        else:
+            correct_option = self.questions[self.current_q].correct_option
+            correct_text = self.questions[self.current_q].options_en[correct_option] \
+                if self.language == "en" else self.questions[self.current_q].options_fr[correct_option]
+            self.feedback_label.config(
+                text=f"❌ Wrong! Correct answer: {correct_option}. {correct_text}", foreground="red")
+
+        self.root.after(2000, self.move_to_next_question)
