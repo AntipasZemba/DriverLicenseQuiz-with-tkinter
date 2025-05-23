@@ -316,3 +316,9 @@ class QuizApp:
                     f"Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
 
         ttk.Button(self.root, text="Exit", command=self.root.destroy).pack(pady=10)
+
+# --- Run App ---
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = QuizApp(root)
+    root.mainloop()
