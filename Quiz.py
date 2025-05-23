@@ -257,4 +257,16 @@ class QuizApp:
 
         self.countdown()
 
-    
+    def countdown(self):
+        if not self.question_active:
+            return
+        if self.remaining_time > 0:
+            self.timer_label.config(text=f"Time left: {self.remaining_time}")
+            self.remaining_time -= 1
+            self.root.after(1000, self.countdown)
+        else:
+            self.question_active = False
+            self.timer_label.config(text="⏰ Time's up!")
+            self.submit_btn.config(state="disabled")
+            self.feedback_label.config(text="Time's up! No answer submitted.", foreground="red")
+            self.root.after(2000, self.move_to_next_question)
