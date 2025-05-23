@@ -294,3 +294,25 @@ class QuizApp:
                 text=f"❌ Wrong! Correct answer: {correct_option}. {correct_text}", foreground="red")
 
         self.root.after(2000, self.move_to_next_question)
+
+    def move_to_next_question(self):
+        self.current_q += 1
+        self.show_question()
+
+    def show_result(self):
+        self.clear_window()
+        total = len(self.questions)
+        percent = (self.score / total) * 100
+
+        ttk.Label(self.root, text="🎓 Quiz Completed!", font=("Arial", 16)).pack(pady=10)
+        ttk.Label(self.root, text=f"Score: {self.score}/{total} ({percent:.1f}%)").pack()
+
+        result_text = "🎉 PASS – You qualified!" if percent >= 70 else "❌ FAIL – Try again."
+        ttk.Label(self.root, text=result_text, font=("Arial", 12)).pack(pady=10)
+
+        with open("quiz_results.txt", "a") as f:
+            f.write(f"{self.user.first_name} {self.user.last_name}, ID: {self.user.id_number}, Age: {self.user.age}, "
+                    f"Score: {self.score}/{total}, {percent:.1f}%, Lang: {self.language}, "
+                    f"Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+        ttk.Button(self.root, text="Exit", command=self.root.destroy).pack(pady=10)
