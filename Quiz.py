@@ -129,3 +129,132 @@ class QuizApp:
 
         self.apply_theme()
         self.show_welcome_screen()
+
+    def apply_theme(self):
+        if self.dark_mode:
+            self.root.configure(bg="#2e2e2e")
+            self.style.configure("TLabel", background="#2e2e2e", foreground="white")
+            self.style.configure("TRadiobutton", background="#2e2e2e", foreground="white")
+            self.style.configure("TButton", background="#444", foreground="white")
+        else:
+            self.root.configure(bg="SystemButtonFace")
+            self.style.configure("TLabel", background="SystemButtonFace", foreground="black")
+            self.style.configure("TRadiobutton", background="SystemButtonFace", foreground="black")
+            self.style.configure("TButton", background="SystemButtonFace", foreground="black")
+
+    def toggle_theme(self):
+        self.dark_mode = not self.dark_mode
+        self.apply_theme()
+        self.show_question()
+
+    def clear_window(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+    def show_welcome_screen(self):
+        self.clear_window()
+        tk.Label(self.root, text="👤 Driving License Quiz", font=("Arial", 18)).pack(pady=10)
+
+        tk.Label(self.root, text="First Name:").pack()
+        self.first_name_entry = tk.Entry(self.root)
+        self.first_name_entry.pack()
+
+        tk.Label(self.root, text="Last Name:").pack()
+        self.last_name_entry = tk.Entry(self.root)
+        self.last_name_entry.pack()
+
+        tk.Label(self.root, text="ID Number:").pack()
+        self.id_entry = tk.Entry(self.root)
+        self.id_entry.pack()
+
+        tk.Label(self.root, text="Age:").pack()
+        self.age_entry = tk.Entry(self.root)
+        self.age_entry.pack()
+
+        tk.Label(self.root, text="Choose language:").pack()
+        self.lang_var = tk.StringVar(value="en")
+        tk.Radiobutton(self.root, text="English", variable=self.lang_var, value="en").pack()
+        tk.Radiobutton(self.root, text="Français", variable=self.lang_var, value="fr").pack()
+
+        tk.Button(self.root, text="Start Quiz", command=self.start_quiz).pack(pady=10)
+
+    def start_quiz(self):
+        first_name = self.first_name_entry.get().strip()
+        last_name = self.last_name_entry.get().strip()
+        id_number = self.id_entry.get().strip()
+        age_input = self.age_entry.get().strip()
+
+        if not (first_name.isalpha() and last_name.isalpha()):
+            messagebox.showerror("Invalid Input", "Please enter valid alphabetic First and Last names.")
+            return
+
+        if not id_number.isdigit():
+            messagebox.showerror("Invalid Input", "ID Number must be numeric.")
+            return
+
+        if not age_input.isdigit():
+            messagebox.showerror("Invalid Input", "Age must be a number.")
+            return
+
+        age = int(age_input)
+        if age < 16:
+            messagebox.showwarning("Too Young", "You must be at least 16 to take the quiz.")
+            return
+
+        self.user = User(first_name, last_name, id_number, age)
+        self.language = self.lang_var.get()
+        self.current_q = 0
+        self.score = 0
+        random.shuffle(self.questions)
+        self.show_question()
+
+    def show_question(self):
+        if self.current_q >= len(self.questions):
+            self.show_result()
+            return
+
+        self.clear_window()
+        self.selected_answer.set("")
+        self.question_active = True
+        self.remaining_time = self.time_limit
+        self.feedback_label = None
+
+        question = self.questions[self.current_q]
+        lang = self.language
+        prompt = question.prompt_en if lang == "en" else question.prompt_fr
+        options = question.options_en if lang == "en" else question.options_fr
+
+        ttk.Label(self.root, text=f"Question {self.current_q + 1}/{len(self.questions)}", font=("Arial", 14)).pack(pady=5)
+        ttk.Label(self.root, text=f"📘 {question.category}", font=("Arial", 10, "italic")).pack()
+        ttk.Label(self.root, text=prompt, wraplength=400, font=("Arial", 12)).pack(pady=10)
+
+        for key in sorted(options.keys()):
+            ttk.Radiobutton(self.root, text=f"{key}. {options[key]}", variable=self.selected_answer, value=key).pack(anchor="w")
+
+        self.timer_label = ttk.Label(self.root, text="Time left: 30", font=("Arial", 12, "bold"))
+        self.timer_label.pack(pady=10)
+
+        self.submit_btn = ttk.Button(self.root, text="Submit", command=self.submit_answer)
+        self.submit_btn.pack()
+
+        self.feedback_label = ttk.Label(self.root, text="", font=("Arial", 11))
+        self.feedback_label.pack(pady=5)
+
+        # Progress Bar
+        progress_frame = ttk.Frame(self.root)
+        progress_frame.pack(pady=10, fill="x", padx=20)
+
+        progress_label = ttk.Label(progress_frame, text="Progress:")
+        progress_label.pack(side="left")
+
+        progress_bar = ttk.Progressbar(progress_frame, variable=self.progress_var, maximum=len(self.questions), length=300)
+        progress_bar.pack(side="left", padx=10)
+        self.progress_var.set(self.current_q + 1)
+
+        # Theme toggle
+        theme_btn_text = "🌙 Switch to Dark Mode" if not self.dark_mode else "☀️ Switch to Light Mode"
+        ttk.Button(self.root, text=theme_btn_text, command=self.toggle_theme).pack(pady=5)
+
+        self.countdown()
+
+    
